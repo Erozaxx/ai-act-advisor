@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Decision record pro rozhodnutí, na kterém se podílela AI</title>
+<style>
+:root {
+  --color-primary:      #1A1A1A;
+  --color-primary-text: #FFFFFF;
+  --color-bg:           #F7F7F5;
+  --color-surface:      #FFFFFF;
+  --color-text:         #1A1A1A;
+  --color-text-muted:   #5C6370;
+  --color-border:       #E2E2E2;
+  --color-success:      #16A34A;
+  --color-danger:       #DC2626;
+  --font-base: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.6rem;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { overflow-x: hidden; }
+body { font-family: var(--font-base); font-size: var(--font-size-md); color: var(--color-text); background: var(--color-bg); line-height: 1.6; overflow-x: hidden; }
+
+.dr-wrap { max-width: 760px; margin: 0 auto; padding: var(--space-xl) var(--space-md) var(--space-xl); }
+
+.back-link { display: inline-block; margin-bottom: var(--space-lg); font-size: var(--font-size-sm); color: var(--color-text-muted); text-decoration: none; }
+.back-link:hover { color: var(--color-text); text-decoration: underline; }
+
+.dr-kicker { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--space-xs); }
+h1 { font-size: var(--font-size-xl); font-weight: 700; margin-bottom: var(--space-md); color: var(--color-text); }
+.dr-intro { color: var(--color-text); margin-bottom: var(--space-md); max-width: 68ch; }
+.dr-intro:last-of-type { margin-bottom: var(--space-lg); }
+
+.dr-actions { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--space-lg); margin-bottom: var(--space-xl); }
+.dr-actions p { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: var(--space-md); }
+.btn-download-primary { display: inline-block; background: var(--color-primary); color: var(--color-primary-text); border: none; border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); font-size: var(--font-size-md); font-weight: 700; font-family: var(--font-base); cursor: pointer; text-align: center; }
+.btn-download-primary:hover { opacity: 0.85; }
+.btn-download-primary:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.file-actions-row { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; margin-top: var(--space-sm); }
+.btn-copy { background: none; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); font-size: var(--font-size-sm); font-weight: 600; font-family: var(--font-base); color: var(--color-text); cursor: pointer; }
+.btn-copy:hover { background: var(--color-bg); border-color: var(--color-primary); }
+.btn-copy:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.link-btn { background: none; border: none; color: var(--color-text-muted); font-size: var(--font-size-sm); font-family: var(--font-base); text-decoration: underline; cursor: pointer; padding: var(--space-xs) 0; margin-top: var(--space-sm); display: inline-block; }
+.link-btn:hover { color: var(--color-primary); }
+.copy-feedback-ok { color: var(--color-success); font-size: var(--font-size-sm); font-weight: 600; display: none; }
+.copy-feedback-err { color: var(--color-danger); font-size: var(--font-size-sm); display: none; }
+
+main h2 { font-size: var(--font-size-lg); font-weight: 700; margin: var(--space-xl) 0 var(--space-sm); color: var(--color-text); }
+main p { margin-bottom: var(--space-md); max-width: 68ch; }
+main section:first-of-type h2 { margin-top: var(--space-lg); }
+
+.dr-record { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-md) var(--space-lg); margin: var(--space-md) 0 var(--space-lg); overflow-x: auto; }
+.dr-record pre { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: var(--font-size-sm); white-space: pre-wrap; word-break: break-word; color: var(--color-text); line-height: 1.5; }
+
+.dr-footer { margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px solid var(--color-border); font-size: var(--font-size-sm); color: var(--color-text-muted); }
+.dr-footer a { color: var(--color-text); font-weight: 600; }
+
+/* ===== DIALOG (copy fallback) ===== */
+dialog#copy-dialog { border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--space-lg); max-width: 500px; width: 90%; font-family: var(--font-base); color: var(--color-text); background: var(--color-surface); }
+dialog#copy-dialog::backdrop { background: rgba(0,0,0,0.4); }
+dialog#copy-dialog p { margin-bottom: var(--space-sm); font-size: var(--font-size-sm); }
+dialog#copy-dialog textarea { width: 100%; min-height: 160px; font-family: monospace; font-size: var(--font-size-sm); padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md); resize: vertical; margin-bottom: var(--space-sm); }
+dialog#copy-dialog button { background: var(--color-primary); color: var(--color-primary-text); border: none; border-radius: var(--radius-md); padding: var(--space-sm) var(--space-lg); font-weight: 700; cursor: pointer; font-family: var(--font-base); }
+
+@media (max-width: 480px) {
+  .dr-wrap { padding: var(--space-lg) var(--space-sm); }
+}
+
+@media print {
+  .no-print { display: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="dr-wrap">
+
+  <a class="back-link no-print" href="ai-act-advisor-procuppa.html">← Zpět na AI Act Compliance Advisor</a>
+
+  <p class="dr-kicker">AI Act Compliance Advisor · doplňkový materiál</p>
+  <h1>Decision record pro rozhodnutí, na kterém se podílela AI</h1>
+  <p class="dr-intro">Decision record je jednostránkový záznam o tom, že rozhodl člověk. Zapíše se, co AI navrhla, kdo to posoudil, co z toho nakonec platí a proč. Nic víc.</p>
+  <p class="dr-intro">Smysl je jednoduchý. Když se za půl roku někdo zeptá, proč jste vybrali tohohle dodavatele nebo proč jste odmítli tuhle reklamaci, nechcete odpovídat „to nám vyhodila umělá inteligence". Chcete ukázat papír, kde je jméno člověka, datum a důvod.</p>
+
+  <div class="dr-actions no-print">
+    <p>Celý tenhle text (oba vyplněné příklady, prázdná šablona i vysvětlení) si můžete stáhnout nebo zkopírovat jako jeden soubor.</p>
+    <button class="btn-download-primary" onclick="downloadText('md-decision-record','ai-act-decision-record.txt','text/plain;charset=utf-8')">Stáhnout (.txt)</button>
+    <div class="file-actions-row">
+      <button class="btn-copy" onclick="copyEmbedded('md-decision-record','fb-dr')">Zkopírovat text</button>
+      <span class="copy-feedback-ok" id="fb-dr-ok">Zkopírováno!</span>
+      <span class="copy-feedback-err" id="fb-dr-err">Kopírování selhalo, otevírám okno pro ruční zkopírování.</span>
+    </div>
+    <button class="link-btn" onclick="downloadText('md-decision-record','ai-act-decision-record.md','text/markdown;charset=utf-8')">Stáhnout jako .md (pro pokročilé – obsah je stejný)</button>
+  </div>
+
+  <main>
+
+  <section>
+    <h2>Kdy ho zakládat</h2>
+    <p>Zakládejte ho u rozhodnutí, která mají dopad ven z firmy nebo na peníze: výběr dodavatele, cenová nabídka, zamítnutí reklamace, ukončení smlouvy, personální krok. Tedy tam, kde by vám vadilo, kdyby to zůstalo bez stopy.</p>
+    <p>Nezakládejte ho pokaždé, když si necháte od AI přepsat e-mail nebo shrnout zápis z porady. Když se něčeho takového nakupí sto denně, přestanete to dělat do týdne a zůstane vám prázdná složka a falešný pocit pořádku.</p>
+    <p>Hranici si nastavte sami a napište ji na jeden řádek. Třeba: „Decision record zakládáme u nákupů nad 50 000 Kč a u všeho, co jde přímo zákazníkovi."</p>
+  </section>
+
+  <section>
+    <h2>Vyplněný příklad</h2>
+    <p>Následující záznam je smyšlený, čísla i jména jsou ilustrativní.</p>
+    <div class="dr-record"><pre>ID záznamu: DR-2026-014
+Datum: 30. 7. 2026
+
+Rozhodnutí:
+Vybrat dodavatele kartonových obalů pro Q4 2026.
+
+Kdo rozhodl:
+Marie Dvořáková, vedoucí nákupu
+
+Použitý nástroj:
+ChatGPT Plus, model uvedený v aplikaci jako GPT-5, placený firemní účet
+
+Co do něj vstoupilo:
+Tři cenové nabídky (Obalex, KartonPlus, BoxTrade) ve formátu PDF, bez kontaktních
+údajů zástupců. Roční odběr 120 000 ks, požadovaná dodací lhůta do 10 dnů.
+
+Co AI navrhla:
+Doporučila BoxTrade jako nejlevnější variantu, jednotková cena 4,10 Kč,
+úspora 68 000 Kč ročně oproti stávajícímu dodavateli.
+
+Jak jsem s tím naložila:
+Doporučení jsem nepřijala celé. BoxTrade má minimální odběr 30 000 ks na objednávku,
+což nám váže sklad na tři měsíce dopředu. Vybrala jsem KartonPlus za 4,35 Kč
+s minimálním odběrem 5 000 ks. Roční úspora vychází na 42 000 Kč, ale bez zamrznutí
+skladu. AI o skladových nákladech nevěděla, v nabídkách ta informace nebyla.
+
+Koho se rozhodnutí týká:
+Interní. Zákazníků se nedotýká, jde o vstupní materiál.
+
+Kde je uložený podklad:
+Export konverzace a všechny tři nabídky: \\fileserver\nakup\2026\DR-2026-014\
+
+Potvrzeno:
+Marie Dvořáková, 30. 7. 2026</pre></div>
+    <p>Podstatná je předposlední část. Ukazuje, že člověk doporučení nepřevzal mechanicky, ale doplnil informaci, kterou model neměl. To je přesně ten rozdíl, na který se ptají.</p>
+  </section>
+
+  <section>
+    <h2>Druhý příklad, když AI něco spustí sama</h2>
+    <p>Jiná situace nastane, pokud AI nejen radí, ale i koná. Tam patří navíc řádek o tom, kdo akci schválil před spuštěním.</p>
+    <div class="dr-record"><pre>ID záznamu: DR-2026-021
+Datum: 2. 8. 2026
+
+Rozhodnutí:
+Povolit automatický restart služby app-gateway při zaplnění paměti nad 92 %.
+
+Kdo rozhodl:
+Petr Novák, vedoucí provozu
+
+Použitý nástroj:
+Interní monitorovací asistent, verze 2.4
+
+Co AI navrhla:
+Restart provádět automaticky bez čekání na operátora, odhad zkrácení výpadku
+z 12 na 2 minuty.
+
+Jak jsem s tím naložil:
+Schváleno s omezením. Automatický restart jen v okně 22:00 až 5:00. Mimo něj
+asistent pošle návrh operátorovi a čeká na potvrzení. Důvod: v provozní špičce
+běží na gateway platební transakce a restart bez dohledu je riziko.
+
+Platnost:
+Do 31. 12. 2026, pak revize podle počtu zásahů.
+
+Potvrzeno:
+Petr Novák, 2. 8. 2026</pre></div>
+  </section>
+
+  <section>
+    <h2>Prázdná šablona ke zkopírování</h2>
+    <div class="dr-record"><pre>ID záznamu:
+Datum:
+
+Rozhodnutí:
+
+Kdo rozhodl:
+
+Použitý nástroj:
+
+Co do něj vstoupilo:
+
+Co AI navrhla:
+
+Jak jsem s tím naložil:
+
+Koho se rozhodnutí týká:
+
+Kde je uložený podklad:
+
+Potvrzeno:</pre></div>
+  </section>
+
+  <section>
+    <h2>Kde záznamy držet</h2>
+    <p>Potřebujete, aby šlo doložit, že se záznam zpětně neupravoval. Na to nemusíte kupovat nic speciálního.</p>
+    <p>Nejjednodušší cesta pro malou firmu je sdílený adresář na SharePointu nebo Google Drivu se zapnutou historií verzí. Vidíte, kdo co kdy změnil, a starší verze zůstanou. Kdo už používá Git, může záznamy commitovat do repozitáře, tam je historie z principu. Firmy s dokumentovým systémem to dají jako typ dokumentu tam.</p>
+    <p>Editovatelný excel na ploše účetní k tomu nestačí. Ne proto, že by byl zakázaný, ale protože z něj nedoložíte, že v něm někdo minulý týden něco nepřepsal.</p>
+  </section>
+
+  <section>
+    <h2>Co tenhle dokument není</h2>
+    <p>Není to právní stanovisko ani formulář předepsaný nějakým předpisem. Je to praktická pomůcka. Decision record dokládá, že za rozhodnutím stojí konkrétní člověk s konkrétním důvodem, což je věc, kterou po vás v souvislosti s používáním AI někdo dřív nebo později bude chtít vidět.</p>
+    <p>Jestli se vás týkají další povinnosti, závisí to na tom, co s AI ve firmě děláte a v jaké roli. Na to se ptejte právníka, ne šablony.</p>
+  </section>
+
+  </main>
+
+  <p class="dr-footer">Součást kitu AI Act Compliance Advisor. <a href="ai-act-advisor-procuppa.html">← Zpět na onepager s návodem k instalaci</a>.</p>
+
+</div>
+
+<!-- ===== DIALOG PRO RUCNI ZKOPIROVANI (3. stupen fallbacku) ===== -->
+<dialog id="copy-dialog">
+  <p>Automatické kopírování se nepodařilo. Označte text v poli níže (je předvybraný) a stiskněte Ctrl+C (na Macu Cmd+C).</p>
+  <textarea id="copy-dialog-text" readonly></textarea>
+  <button type="button" onclick="document.getElementById('copy-dialog').close()">Zavřít</button>
+</dialog>
+
+<!-- ===== EMBEDOVANY OBSAH SOUBORU: decision-record-priklad.md (kanonicky text) ===== -->
+<script type="text/plain" id="md-decision-record"># Decision record pro rozhodnutí, na kterém se podílela AI
+
+Decision record je jednostránkový záznam o tom, že rozhodl člověk. Zapíše se, co AI navrhla, kdo to posoudil, co z toho nakonec platí a proč. Nic víc.
+
+Smysl je jednoduchý. Když se za půl roku někdo zeptá, proč jste vybrali tohohle dodavatele nebo proč jste odmítli tuhle reklamaci, nechcete odpovídat „to nám vyhodila umělá inteligence". Chcete ukázat papír, kde je jméno člověka, datum a důvod.
+
+## Kdy ho zakládat
+
+Zakládejte ho u rozhodnutí, která mají dopad ven z firmy nebo na peníze: výběr dodavatele, cenová nabídka, zamítnutí reklamace, ukončení smlouvy, personální krok. Tedy tam, kde by vám vadilo, kdyby to zůstalo bez stopy.
+
+Nezakládejte ho pokaždé, když si necháte od AI přepsat e-mail nebo shrnout zápis z porady. Když se něčeho takového nakupí sto denně, přestanete to dělat do týdne a zůstane vám prázdná složka a falešný pocit pořádku.
+
+Hranici si nastavte sami a napište ji na jeden řádek. Třeba: „Decision record zakládáme u nákupů nad 50 000 Kč a u všeho, co jde přímo zákazníkovi."
+
+## Vyplněný příklad
+
+Následující záznam je smyšlený, čísla i jména jsou ilustrativní.
+
+```
+ID záznamu: DR-2026-014
+Datum: 30. 7. 2026
+
+Rozhodnutí:
+Vybrat dodavatele kartonových obalů pro Q4 2026.
+
+Kdo rozhodl:
+Marie Dvořáková, vedoucí nákupu
+
+Použitý nástroj:
+ChatGPT Plus, model uvedený v aplikaci jako GPT-5, placený firemní účet
+
+Co do něj vstoupilo:
+Tři cenové nabídky (Obalex, KartonPlus, BoxTrade) ve formátu PDF, bez kontaktních
+údajů zástupců. Roční odběr 120 000 ks, požadovaná dodací lhůta do 10 dnů.
+
+Co AI navrhla:
+Doporučila BoxTrade jako nejlevnější variantu, jednotková cena 4,10 Kč,
+úspora 68 000 Kč ročně oproti stávajícímu dodavateli.
+
+Jak jsem s tím naložila:
+Doporučení jsem nepřijala celé. BoxTrade má minimální odběr 30 000 ks na objednávku,
+což nám váže sklad na tři měsíce dopředu. Vybrala jsem KartonPlus za 4,35 Kč
+s minimálním odběrem 5 000 ks. Roční úspora vychází na 42 000 Kč, ale bez zamrznutí
+skladu. AI o skladových nákladech nevěděla, v nabídkách ta informace nebyla.
+
+Koho se rozhodnutí týká:
+Interní. Zákazníků se nedotýká, jde o vstupní materiál.
+
+Kde je uložený podklad:
+Export konverzace a všechny tři nabídky: \\fileserver\nakup\2026\DR-2026-014\
+
+Potvrzeno:
+Marie Dvořáková, 30. 7. 2026
+```
+
+Podstatná je předposlední část. Ukazuje, že člověk doporučení nepřevzal mechanicky, ale doplnil informaci, kterou model neměl. To je přesně ten rozdíl, na který se ptají.
+
+## Druhý příklad, když AI něco spustí sama
+
+Jiná situace nastane, pokud AI nejen radí, ale i koná. Tam patří navíc řádek o tom, kdo akci schválil před spuštěním.
+
+```
+ID záznamu: DR-2026-021
+Datum: 2. 8. 2026
+
+Rozhodnutí:
+Povolit automatický restart služby app-gateway při zaplnění paměti nad 92 %.
+
+Kdo rozhodl:
+Petr Novák, vedoucí provozu
+
+Použitý nástroj:
+Interní monitorovací asistent, verze 2.4
+
+Co AI navrhla:
+Restart provádět automaticky bez čekání na operátora, odhad zkrácení výpadku
+z 12 na 2 minuty.
+
+Jak jsem s tím naložil:
+Schváleno s omezením. Automatický restart jen v okně 22:00 až 5:00. Mimo něj
+asistent pošle návrh operátorovi a čeká na potvrzení. Důvod: v provozní špičce
+běží na gateway platební transakce a restart bez dohledu je riziko.
+
+Platnost:
+Do 31. 12. 2026, pak revize podle počtu zásahů.
+
+Potvrzeno:
+Petr Novák, 2. 8. 2026
+```
+
+## Prázdná šablona ke zkopírování
+
+```
+ID záznamu:
+Datum:
+
+Rozhodnutí:
+
+Kdo rozhodl:
+
+Použitý nástroj:
+
+Co do něj vstoupilo:
+
+Co AI navrhla:
+
+Jak jsem s tím naložil:
+
+Koho se rozhodnutí týká:
+
+Kde je uložený podklad:
+
+Potvrzeno:
+```
+
+## Kde záznamy držet
+
+Potřebujete, aby šlo doložit, že se záznam zpětně neupravoval. Na to nemusíte kupovat nic speciálního.
+
+Nejjednodušší cesta pro malou firmu je sdílený adresář na SharePointu nebo Google Drivu se zapnutou historií verzí. Vidíte, kdo co kdy změnil, a starší verze zůstanou. Kdo už používá Git, může záznamy commitovat do repozitáře, tam je historie z principu. Firmy s dokumentovým systémem to dají jako typ dokumentu tam.
+
+Editovatelný excel na ploše účetní k tomu nestačí. Ne proto, že by byl zakázaný, ale protože z něj nedoložíte, že v něm někdo minulý týden něco nepřepsal.
+
+## Co tenhle dokument není
+
+Není to právní stanovisko ani formulář předepsaný nějakým předpisem. Je to praktická pomůcka. Decision record dokládá, že za rozhodnutím stojí konkrétní člověk s konkrétním důvodem, což je věc, kterou po vás v souvislosti s používáním AI někdo dřív nebo později bude chtít vidět.
+
+Jestli se vás týkají další povinnosti, závisí to na tom, co s AI ve firmě děláte a v jaké roli. Na to se ptejte právníka, ne šablony.
+</script>
+
+<script>
+function downloadText(elementId, fileName, mime) {
+  var text = document.getElementById(elementId).textContent.trim() + "\n";
+  var blob = new Blob([text], { type: mime });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+}
+
+function showCopyOk(feedbackId) {
+  var ok = document.getElementById(feedbackId + '-ok');
+  var err = document.getElementById(feedbackId + '-err');
+  if (err) err.style.display = 'none';
+  if (ok) {
+    ok.style.display = 'inline';
+    setTimeout(function () { ok.style.display = 'none'; }, 2500);
+  }
+}
+
+function openCopyDialog(text) {
+  var dlg = document.getElementById('copy-dialog');
+  var ta = document.getElementById('copy-dialog-text');
+  ta.value = text;
+  if (typeof dlg.showModal === 'function') {
+    if (!dlg.open) dlg.showModal();
+  } else {
+    dlg.setAttribute('open', 'open');
+    dlg.style.display = 'block';
+    dlg.style.position = 'fixed';
+    dlg.style.top = '10%';
+    dlg.style.left = '50%';
+    dlg.style.transform = 'translateX(-50%)';
+    dlg.style.zIndex = '9999';
+  }
+  ta.focus();
+  ta.select();
+}
+
+function fallbackExecCopy(text, feedbackId) {
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (!ok) { throw new Error('execCommand selhal'); }
+    showCopyOk(feedbackId);
+  } catch (e) {
+    var err = document.getElementById(feedbackId + '-err');
+    if (err) {
+      err.style.display = 'inline';
+      setTimeout(function () { err.style.display = 'none'; }, 4000);
+    }
+    openCopyDialog(text);
+  }
+}
+
+function copyText(text, feedbackId) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      function () { showCopyOk(feedbackId); },
+      function () { fallbackExecCopy(text, feedbackId); }
+    );
+  } else {
+    fallbackExecCopy(text, feedbackId);
+  }
+}
+
+function copyEmbedded(elementId, feedbackId) {
+  var text = document.getElementById(elementId).textContent.trim() + "\n";
+  copyText(text, feedbackId);
+}
+</script>
+
+</body>
+</html>
