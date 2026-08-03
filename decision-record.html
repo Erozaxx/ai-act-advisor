@@ -15,6 +15,7 @@
   --color-text-muted:   #5C6370;
   --color-border:       #E2E2E2;
   --color-success:      #16A34A;
+  --color-warning:      #D97706;
   --color-danger:       #DC2626;
   --font-base: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-size-sm: 0.875rem;
@@ -37,8 +38,8 @@ body { font-family: var(--font-base); font-size: var(--font-size-md); color: var
 
 .dr-wrap { max-width: 760px; margin: 0 auto; padding: var(--space-xl) var(--space-md) var(--space-xl); }
 
-.back-link { display: inline-block; margin-bottom: var(--space-lg); font-size: var(--font-size-sm); color: var(--color-text-muted); text-decoration: none; }
-.back-link:hover { color: var(--color-text); text-decoration: underline; }
+.noscript-banner { background: var(--color-surface); border: 1px solid var(--color-warning); border-left: 4px solid var(--color-warning); color: var(--color-text); padding: var(--space-md) var(--space-lg); font-size: var(--font-size-sm); margin-bottom: var(--space-lg); }
+.noscript-banner strong { display: block; margin-bottom: var(--space-xs); }
 
 .dr-kicker { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--space-xs); }
 h1 { font-size: var(--font-size-xl); font-weight: 700; margin-bottom: var(--space-md); color: var(--color-text); }
@@ -58,6 +59,11 @@ h1 { font-size: var(--font-size-xl); font-weight: 700; margin-bottom: var(--spac
 .link-btn:hover { color: var(--color-primary); }
 .copy-feedback-ok { color: var(--color-success); font-size: var(--font-size-sm); font-weight: 600; display: none; }
 .copy-feedback-err { color: var(--color-danger); font-size: var(--font-size-sm); display: none; }
+.dl-feedback-info { display: none; color: var(--color-text-muted); font-size: var(--font-size-sm); margin-top: var(--space-xs); }
+.dl-feedback-info.is-err { color: var(--color-danger); font-weight: 600; }
+.file-fallback-link { margin-top: var(--space-xs); }
+.file-fallback-link a { font-size: var(--font-size-sm); color: var(--color-text-muted); text-decoration: underline; }
+.file-fallback-link a:hover { color: var(--color-primary); }
 
 main h2 { font-size: var(--font-size-lg); font-weight: 700; margin: var(--space-xl) 0 var(--space-sm); color: var(--color-text); }
 main p { margin-bottom: var(--space-md); max-width: 68ch; }
@@ -67,7 +73,6 @@ main section:first-of-type h2 { margin-top: var(--space-lg); }
 .dr-record pre { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: var(--font-size-sm); white-space: pre-wrap; word-break: break-word; color: var(--color-text); line-height: 1.5; }
 
 .dr-footer { margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px solid var(--color-border); font-size: var(--font-size-sm); color: var(--color-text-muted); }
-.dr-footer a { color: var(--color-text); font-weight: 600; }
 
 /* ===== DIALOG (copy fallback) ===== */
 dialog#copy-dialog { border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--space-lg); max-width: 500px; width: 90%; font-family: var(--font-base); color: var(--color-text); background: var(--color-surface); }
@@ -86,9 +91,13 @@ dialog#copy-dialog button { background: var(--color-primary); color: var(--color
 </style>
 </head>
 <body>
+<noscript>
+  <div class="noscript-banner">
+    <strong>Tahle stránka funguje nejlépe s povoleným JavaScriptem.</strong>
+    Bez něj nebudou fungovat tlačítka „Stáhnout" a „Zkopírovat text" – celý text záznamu je ale čitelný přímo na stránce níž, stačí ho označit myší a zkopírovat ručně, nebo použít odkaz „Stáhnout přímo". Pokud jste sem přišli z aplikace na sociální síti (LinkedIn, Facebook apod.), zkuste stránku otevřít v běžném prohlížeči (Chrome, Safari, Edge) – většina takových aplikací má v nabídce volbu „Otevřít v prohlížeči".
+  </div>
+</noscript>
 <div class="dr-wrap">
-
-  <a class="back-link no-print" href="ai-act-advisor-procuppa.html">← Zpět na AI Act Compliance Advisor</a>
 
   <p class="dr-kicker">AI Act Compliance Advisor · doplňkový materiál</p>
   <h1>Decision record pro rozhodnutí, na kterém se podílela AI</h1>
@@ -97,13 +106,15 @@ dialog#copy-dialog button { background: var(--color-primary); color: var(--color
 
   <div class="dr-actions no-print">
     <p>Celý tenhle text (oba vyplněné příklady, prázdná šablona i vysvětlení) si můžete stáhnout nebo zkopírovat jako jeden soubor.</p>
-    <button class="btn-download-primary" onclick="downloadText('md-decision-record','ai-act-decision-record.txt','text/plain;charset=utf-8')">Stáhnout (.txt)</button>
+    <button class="btn-download-primary" onclick="handleDownloadClick('md-decision-record','ai-act-decision-record.txt','text/plain;charset=utf-8','fb-dr','Zkuste odkaz „Stáhnout přímo“ níž nebo tlačítko Zkopírovat text.')">Stáhnout (.txt)</button>
+    <span class="dl-feedback-info" id="fb-dr-dlhint"></span>
     <div class="file-actions-row">
       <button class="btn-copy" onclick="copyEmbedded('md-decision-record','fb-dr')">Zkopírovat text</button>
       <span class="copy-feedback-ok" id="fb-dr-ok">Zkopírováno!</span>
       <span class="copy-feedback-err" id="fb-dr-err">Kopírování selhalo, otevírám okno pro ruční zkopírování.</span>
     </div>
-    <button class="link-btn" onclick="downloadText('md-decision-record','ai-act-decision-record.md','text/markdown;charset=utf-8')">Stáhnout jako .md (pro pokročilé – obsah je stejný)</button>
+    <div class="file-fallback-link"><a href="data:text/plain;charset=utf-8;base64,IyBEZWNpc2lvbiByZWNvcmQgcHJvIHJvemhvZG51dMOtLCBuYSBrdGVyw6ltIHNlIHBvZMOtbGVsYSBBSQoKRGVjaXNpb24gcmVjb3JkIGplIGplZG5vc3Ryw6Fua292w70gesOhem5hbSBvIHRvbSwgxb5lIHJvemhvZGwgxI1sb3bEm2suIFphcMOtxaFlIHNlLCBjbyBBSSBuYXZyaGxhLCBrZG8gdG8gcG9zb3VkaWwsIGNvIHogdG9obyBuYWtvbmVjIHBsYXTDrSBhIHByb8SNLiBOaWMgdsOtYy4KClNteXNsIGplIGplZG5vZHVjaMO9LiBLZHnFviBzZSB6YSBwxa9sIHJva3UgbsSba2RvIHplcHTDoSwgcHJvxI0ganN0ZSB2eWJyYWxpIHRvaG9obGUgZG9kYXZhdGVsZSBuZWJvIHByb8SNIGpzdGUgb2Rtw610bGkgdHVobGUgcmVrbGFtYWNpLCBuZWNoY2V0ZSBvZHBvdsOtZGF0IOKAnnRvIG7DoW0gdnlob2RpbGEgdW3Em2zDoSBpbnRlbGlnZW5jZSIuIENoY2V0ZSB1a8OhemF0IHBhcMOtciwga2RlIGplIGptw6lubyDEjWxvdsSba2EsIGRhdHVtIGEgZMWvdm9kLgoKIyMgS2R5IGhvIHpha2zDoWRhdAoKWmFrbMOhZGVqdGUgaG8gdSByb3pob2RudXTDrSwga3RlcsOhIG1hasOtIGRvcGFkIHZlbiB6IGZpcm15IG5lYm8gbmEgcGVuw616ZTogdsO9YsSbciBkb2RhdmF0ZWxlLCBjZW5vdsOhIG5hYsOtZGthLCB6YW3DrXRudXTDrSByZWtsYW1hY2UsIHVrb27EjWVuw60gc21sb3V2eSwgcGVyc29uw6FsbsOtIGtyb2suIFRlZHkgdGFtLCBrZGUgYnkgdsOhbSB2YWRpbG8sIGtkeWJ5IHRvIHrFr3N0YWxvIGJleiBzdG9weS4KCk5lemFrbMOhZGVqdGUgaG8gcG9rYcW+ZMOpLCBrZHnFviBzaSBuZWNow6F0ZSBvZCBBSSBwxZllcHNhdCBlLW1haWwgbmVibyBzaHJub3V0IHrDoXBpcyB6IHBvcmFkeS4gS2R5xb4gc2UgbsSbxI1laG8gdGFrb3bDqWhvIG5ha3Vww60gc3RvIGRlbm7EmywgcMWZZXN0YW5ldGUgdG8gZMSbbGF0IGRvIHTDvWRuZSBhIHrFr3N0YW5lIHbDoW0gcHLDoXpkbsOhIHNsb8W+a2EgYSBmYWxlxaFuw70gcG9jaXQgcG/FmcOhZGt1LgoKSHJhbmljaSBzaSBuYXN0YXZ0ZSBzYW1pIGEgbmFwacWhdGUgamkgbmEgamVkZW4gxZnDoWRlay4gVMWZZWJhOiDigJ5EZWNpc2lvbiByZWNvcmQgemFrbMOhZMOhbWUgdSBuw6FrdXDFryBuYWQgNTAgMDAwIEvEjSBhIHUgdsWhZWhvLCBjbyBqZGUgcMWZw61tbyB6w6FrYXpuw61rb3ZpLiIKCiMjIFZ5cGxuxJtuw70gcMWZw61rbGFkCgpOw6FzbGVkdWrDrWPDrSB6w6F6bmFtIGplIHNtecWhbGVuw70sIMSNw61zbGEgaSBqbcOpbmEganNvdSBpbHVzdHJhdGl2bsOtLgoKYGBgCklEIHrDoXpuYW11OiBEUi0yMDI2LTAxNApEYXR1bTogMzAuIDcuIDIwMjYKClJvemhvZG51dMOtOgpWeWJyYXQgZG9kYXZhdGVsZSBrYXJ0b25vdsO9Y2ggb2JhbMWvIHBybyBRNCAyMDI2LgoKS2RvIHJvemhvZGw6Ck1hcmllIER2b8WZw6Frb3bDoSwgdmVkb3Vjw60gbsOha3VwdQoKUG91xb5pdMO9IG7DoXN0cm9qOgpDaGF0R1BUIFBsdXMsIG1vZGVsIHV2ZWRlbsO9IHYgYXBsaWthY2kgamFrbyBHUFQtNSwgcGxhY2Vuw70gZmlyZW1uw60gw7rEjWV0CgpDbyBkbyBuxJtqIHZzdG91cGlsbzoKVMWZaSBjZW5vdsOpIG5hYsOtZGt5IChPYmFsZXgsIEthcnRvblBsdXMsIEJveFRyYWRlKSB2ZSBmb3Jtw6F0dSBQREYsIGJleiBrb250YWt0bsOtY2gKw7pkYWrFryB6w6FzdHVwY8WvLiBSb8SNbsOtIG9kYsSbciAxMjAgMDAwIGtzLCBwb8W+YWRvdmFuw6EgZG9kYWPDrSBsaMWvdGEgZG8gMTAgZG7Fry4KCkNvIEFJIG5hdnJobGE6CkRvcG9ydcSNaWxhIEJveFRyYWRlIGpha28gbmVqbGV2bsSbasWhw60gdmFyaWFudHUsIGplZG5vdGtvdsOhIGNlbmEgNCwxMCBLxI0sCsO6c3BvcmEgNjggMDAwIEvEjSByb8SNbsSbIG9wcm90aSBzdMOhdmFqw61jw61tdSBkb2RhdmF0ZWxpLgoKSmFrIGpzZW0gcyB0w61tIG5hbG/FvmlsYToKRG9wb3J1xI1lbsOtIGpzZW0gbmVwxZlpamFsYSBjZWzDqS4gQm94VHJhZGUgbcOhIG1pbmltw6FsbsOtIG9kYsSbciAzMCAwMDAga3MgbmEgb2JqZWRuw6F2a3UsCmNvxb4gbsOhbSB2w6HFvmUgc2tsYWQgbmEgdMWZaSBtxJtzw61jZSBkb3DFmWVkdS4gVnlicmFsYSBqc2VtIEthcnRvblBsdXMgemEgNCwzNSBLxI0KcyBtaW5pbcOhbG7DrW0gb2RixJtyZW0gNSAwMDAga3MuIFJvxI1uw60gw7pzcG9yYSB2eWNow6F6w60gbmEgNDIgMDAwIEvEjSwgYWxlIGJleiB6YW1yem51dMOtCnNrbGFkdS4gQUkgbyBza2xhZG92w71jaCBuw6FrbGFkZWNoIG5ldsSbZMSbbGEsIHYgbmFiw61ka8OhY2ggdGEgaW5mb3JtYWNlIG5lYnlsYS4KCktvaG8gc2Ugcm96aG9kbnV0w60gdMO9a8OhOgpJbnRlcm7DrS4gWsOha2F6bsOta8WvIHNlIG5lZG90w71rw6EsIGpkZSBvIHZzdHVwbsOtIG1hdGVyacOhbC4KCktkZSBqZSB1bG/FvmVuw70gcG9ka2xhZDoKRXhwb3J0IGtvbnZlcnphY2UgYSB2xaFlY2hueSB0xZlpIG5hYsOtZGt5OiBcXGZpbGVzZXJ2ZXJcbmFrdXBcMjAyNlxEUi0yMDI2LTAxNFwKClBvdHZyemVubzoKTWFyaWUgRHZvxZnDoWtvdsOhLCAzMC4gNy4gMjAyNgpgYGAKClBvZHN0YXRuw6EgamUgcMWZZWRwb3NsZWRuw60gxI3DoXN0LiBVa2F6dWplLCDFvmUgxI1sb3bEm2sgZG9wb3J1xI1lbsOtIG5lcMWZZXZ6YWwgbWVjaGFuaWNreSwgYWxlIGRvcGxuaWwgaW5mb3JtYWNpLCBrdGVyb3UgbW9kZWwgbmVtxJtsLiBUbyBqZSBwxZllc27EmyB0ZW4gcm96ZMOtbCwgbmEga3RlcsO9IHNlIHB0YWrDrS4KCiMjIERydWjDvSBwxZnDrWtsYWQsIGtkecW+IEFJIG7Em2NvIHNwdXN0w60gc2FtYQoKSmluw6Egc2l0dWFjZSBuYXN0YW5lLCBwb2t1ZCBBSSBuZWplbiByYWTDrSwgYWxlIGkga29uw6EuIFRhbSBwYXTFmcOtIG5hdsOtYyDFmcOhZGVrIG8gdG9tLCBrZG8gYWtjaSBzY2h2w6FsaWwgcMWZZWQgc3B1xaF0xJtuw61tLgoKYGBgCklEIHrDoXpuYW11OiBEUi0yMDI2LTAyMQpEYXR1bTogMi4gOC4gMjAyNgoKUm96aG9kbnV0w606ClBvdm9saXQgYXV0b21hdGlja8O9IHJlc3RhcnQgc2x1xb5ieSBhcHAtZ2F0ZXdheSBwxZlpIHphcGxuxJtuw60gcGFtxJt0aSBuYWQgOTIgJS4KCktkbyByb3pob2RsOgpQZXRyIE5vdsOhaywgdmVkb3Vjw60gcHJvdm96dQoKUG91xb5pdMO9IG7DoXN0cm9qOgpJbnRlcm7DrSBtb25pdG9yb3ZhY8OtIGFzaXN0ZW50LCB2ZXJ6ZSAyLjQKCkNvIEFJIG5hdnJobGE6ClJlc3RhcnQgcHJvdsOhZMSbdCBhdXRvbWF0aWNreSBiZXogxI1la8OhbsOtIG5hIG9wZXLDoXRvcmEsIG9kaGFkIHprcsOhY2Vuw60gdsO9cGFka3UKeiAxMiBuYSAyIG1pbnV0eS4KCkphayBqc2VtIHMgdMOtbSBuYWxvxb5pbDoKU2NodsOhbGVubyBzIG9tZXplbsOtbS4gQXV0b21hdGlja8O9IHJlc3RhcnQgamVuIHYgb2tuxJsgMjI6MDAgYcW+IDU6MDAuIE1pbW8gbsSbagphc2lzdGVudCBwb8WhbGUgbsOhdnJoIG9wZXLDoXRvcm92aSBhIMSNZWvDoSBuYSBwb3R2cnplbsOtLiBExa92b2Q6IHYgcHJvdm96bsOtIMWhcGnEjWNlCmLEm8W+w60gbmEgZ2F0ZXdheSBwbGF0ZWJuw60gdHJhbnNha2NlIGEgcmVzdGFydCBiZXogZG9obGVkdSBqZSByaXppa28uCgpQbGF0bm9zdDoKRG8gMzEuIDEyLiAyMDI2LCBwYWsgcmV2aXplIHBvZGxlIHBvxI10dSB6w6FzYWjFry4KClBvdHZyemVubzoKUGV0ciBOb3bDoWssIDIuIDguIDIwMjYKYGBgCgojIyBQcsOhemRuw6EgxaFhYmxvbmEga2UgemtvcMOtcm92w6Fuw60KCmBgYApJRCB6w6F6bmFtdToKRGF0dW06CgpSb3pob2RudXTDrToKCktkbyByb3pob2RsOgoKUG91xb5pdMO9IG7DoXN0cm9qOgoKQ28gZG8gbsSbaiB2c3RvdXBpbG86CgpDbyBBSSBuYXZyaGxhOgoKSmFrIGpzZW0gcyB0w61tIG5hbG/FvmlsOgoKS29obyBzZSByb3pob2RudXTDrSB0w71rw6E6CgpLZGUgamUgdWxvxb5lbsO9IHBvZGtsYWQ6CgpQb3R2cnplbm86CmBgYAoKIyMgS2RlIHrDoXpuYW15IGRyxb5ldAoKUG90xZllYnVqZXRlLCBhYnkgxaFsbyBkb2xvxb5pdCwgxb5lIHNlIHrDoXpuYW0genDEm3RuxJsgbmV1cHJhdm92YWwuIE5hIHRvIG5lbXVzw610ZSBrdXBvdmF0IG5pYyBzcGVjacOhbG7DrWhvLgoKTmVqamVkbm9kdcWhxaHDrSBjZXN0YSBwcm8gbWFsb3UgZmlybXUgamUgc2TDrWxlbsO9IGFkcmVzw6HFmSBuYSBTaGFyZVBvaW50dSBuZWJvIEdvb2dsZSBEcml2dSBzZSB6YXBudXRvdSBoaXN0b3Jpw60gdmVyesOtLiBWaWTDrXRlLCBrZG8gY28ga2R5IHptxJtuaWwsIGEgc3RhcsWhw60gdmVyemUgesWvc3Rhbm91LiBLZG8gdcW+IHBvdcW+w612w6EgR2l0LCBtxa/FvmUgesOhem5hbXkgY29tbWl0b3ZhdCBkbyByZXBveml0w6HFmWUsIHRhbSBqZSBoaXN0b3JpZSB6IHByaW5jaXB1LiBGaXJteSBzIGRva3VtZW50b3bDvW0gc3lzdMOpbWVtIHRvIGRhasOtIGpha28gdHlwIGRva3VtZW50dSB0YW0uCgpFZGl0b3ZhdGVsbsO9IGV4Y2VsIG5hIHBsb8WhZSDDusSNZXRuw60gayB0b211IG5lc3RhxI3DrS4gTmUgcHJvdG8sIMW+ZSBieSBieWwgemFrw6F6YW7DvSwgYWxlIHByb3Rvxb5lIHogbsSbaiBuZWRvbG/FvsOtdGUsIMW+ZSB2IG7Em20gbsSba2RvIG1pbnVsw70gdMO9ZGVuIG7Em2NvIG5lcMWZZXBzYWwuCgojIyBDbyB0ZW5obGUgZG9rdW1lbnQgbmVuw60KCk5lbsOtIHRvIHByw6F2bsOtIHN0YW5vdmlza28gYW5pIGZvcm11bMOhxZkgcMWZZWRlcHNhbsO9IG7Em2pha8O9bSBwxZllZHBpc2VtLiBKZSB0byBwcmFrdGlja8OhIHBvbcWvY2thLiBEZWNpc2lvbiByZWNvcmQgZG9rbMOhZMOhLCDFvmUgemEgcm96aG9kbnV0w61tIHN0b2rDrSBrb25rcsOpdG7DrSDEjWxvdsSbayBzIGtvbmtyw6l0bsOtbSBkxa92b2RlbSwgY2/FviBqZSB2xJtjLCBrdGVyb3UgcG8gdsOhcyB2IHNvdXZpc2xvc3RpIHMgcG91xb7DrXbDoW7DrW0gQUkgbsSba2RvIGTFmcOtdiBuZWJvIHBvemTEm2ppIGJ1ZGUgY2h0w610IHZpZMSbdC4KCkplc3RsaSBzZSB2w6FzIHTDvWthasOtIGRhbMWhw60gcG92aW5ub3N0aSwgesOhdmlzw60gdG8gbmEgdG9tLCBjbyBzIEFJIHZlIGZpcm3EmyBkxJtsw6F0ZSBhIHYgamFrw6kgcm9saS4gTmEgdG8gc2UgcHRlanRlIHByw6F2bsOta2EsIG5lIMWhYWJsb255Lgo=" id="fallback-link-dr" download="ai-act-decision-record.txt">Stáhnout přímo (záložní odkaz, funguje i bez JavaScriptu)</a></div>
+    <button class="link-btn" onclick="handleDownloadClick('md-decision-record','ai-act-decision-record.md','text/markdown;charset=utf-8','fb-dr','Zkuste odkaz „Stáhnout přímo“ výš nebo tlačítko Zkopírovat text.')">Stáhnout jako .md (pro pokročilé – obsah je stejný)</button>
   </div>
 
   <main>
@@ -224,8 +235,6 @@ Potvrzeno:</pre></div>
   </section>
 
   </main>
-
-  <p class="dr-footer">Součást kitu AI Act Compliance Advisor. <a href="ai-act-advisor-procuppa.html">← Zpět na onepager s návodem k instalaci</a>.</p>
 
 </div>
 
@@ -446,6 +455,29 @@ function copyText(text, feedbackId) {
 function copyEmbedded(elementId, feedbackId) {
   var text = document.getElementById(elementId).textContent.trim() + "\n";
   copyText(text, feedbackId);
+}
+
+// Zaruka pro pripad, ze stahovani pres Blob v danem prohlizeci mlcky selze (typicke pro vestavene
+// prohlizece socialnich siti). downloadText() se nemeni, jen se obali zpetnou vazbou pro uzivatele
+// a odkazem na skutecnou zalozni cestu (odkaz "Stahnout primo" nebo tlacitko Zkopirovat text).
+function handleDownloadClick(elementId, fileName, mime, feedbackId, fallbackMsg) {
+  var hint = document.getElementById(feedbackId + '-dlhint');
+  var msg = fallbackMsg || 'Pokud se soubor neuložil, použijte tlačítko Zkopírovat text výš.';
+  try {
+    downloadText(elementId, fileName, mime);
+    if (hint) {
+      hint.textContent = 'Stahování by mělo začít. ' + msg;
+      hint.classList.remove('is-err');
+      hint.style.display = 'block';
+      setTimeout(function () { hint.style.display = 'none'; }, 7000);
+    }
+  } catch (e) {
+    if (hint) {
+      hint.textContent = 'Stahování se nezdařilo. ' + msg;
+      hint.classList.add('is-err');
+      hint.style.display = 'block';
+    }
+  }
 }
 </script>
 
